@@ -12,7 +12,7 @@ toc_footers:
 search: true
 ---
 
-# 1. Introduction
+# Introduction
 
 L'objectif est d'apprendre les concepts de base de Gradle (explications minimalistes) et ensuite de voir son intégration dans NeoLoad Web.
 
@@ -58,11 +58,7 @@ C'est la plus grosse partie du TP. Il s'agit maintenant de comprendre comment ut
 Arrivé ici, on a potentiellement les infos. suffisantes pour développer dans NeoLoad Web avec Gradle.
 </aside> 
 
-# 2. Environnement général
-
-Comme dit dans l'introduction, on va se familiariser avec l'exécutable Gradle et comprendre comment sont organisés les fichiers qui composent un projet Gradle.
-
-## 2.1 Installation
+# Installation
 
 > MacOS : la commande d'install via le package manager "brew" :
 
@@ -80,15 +76,36 @@ gradle -v
 Gradle requiert la JDK et Groovy. Pour Groovy c'est optionel ; les distributions de Gradle embarquent Groovy. <br/><br/> 
 Cliquez sur le lien pour lire la doc. officielle : [Lien officiel d'installation](https://gradle.org/install/).
 
-## 2.2 Gradle "from scratch"
+# Gradle "from scratch"
 
-On va maintenant - au fur et à mesure - exécuter des opérations basiques permettant d'introduire les concepts de base de Gradle.
+## Introduction
+Gradle est un outils de build générique basé sur des tâches. Contrairement à
+Ant, il repose sur modèle de dépendances
+([DAG](https://fr.wikipedia.org/wiki/Graphe_orient%C3%A9_acyclique)) entre ces
+tâches.  Le tout contenu dans un projet. Pour définir ces tâche gradle s'appuis
+sur un [DSL](https://fr.wikipedia.org/wiki/Langage_d%C3%A9di%C3%A9) reposant
+sur le langage groovy. Cela rend le code beaucoup plus compact et moins
+redondant.  Depuis 2016 nous pouvons aussi utiliser un autre DSL basé sur
+kotlin. Pour notre introduction à gradle nous allons rester sur le DSL basé sur
+groovy.
+
+Le concept de gradle est générique, il peut compiler des projet Java mais aussi
+des projets C/C++ ou javascript.
+
+Gradle est un outil totalement compatible avec Maven, Ant et Ivy.
+Cela va nous permettre de faire une migration douce.
+
+
+On va maintenant - au fur et à mesure - exécuter des opérations basiques
+permettant d'introduire les concepts de base de Gradle.
 
 Ce qui suit est une version condensée et donc moins explicite du tutoriel officiel de Gradle.
 
 Pour les sources, ci après le lien : [Gradle builds](https://guides.gradle.org/creating-new-gradle-builds/).
 
-### 2.2.1 "Projet"
+
+
+## "Projet"
 
 On va créer dans un répertoire spécifique un fichier `build.gradle` (**code A.**)
 > A. Pour les OS de type Unix :
@@ -99,9 +116,13 @@ cd mon-projet-gradle
 touch build.gradle
 ```
 
-Le fichier `build.gradle` est en charge de créer et configurer un **projet**. Ce projet est le point d'entrée du système de build : on a accès via le projet à toutes les fonctionnalités de Gradle. Par curiosité on peut aller voir la [javadoc](https://docs.gradle.org/current/javadoc/org/gradle/api/Project.html) de `Project`.
+Le fichier `build.gradle` est en charge de créer et configurer un **projet**.
+Ce projet est le point d'entrée du système de build : on a accès via le projet
+à toutes les fonctionnalités de Gradle. Par curiosité on peut aller voir la
+[javadoc](https://docs.gradle.org/current/javadoc/org/gradle/api/Project.html)
+de `Project`.
 
-### 2.2.2 "Tâches"
+## "Tâches"
 
 Ce projet contient des sous-éléments appelés "tâches" (**tasks**). 
 
@@ -119,37 +140,26 @@ A l'exécution de cette commande (qui lance la tâche **tasks**), l'on peut voir
 * les tâches sont groupées par "catégories" ("Build Setup tasks" et "Help tasks" pour notre projet vide)
 * les tâches ont un id (un nom) et une description (pas obligatoire).
 
-Le système de build de Gradle est basé sur ces tâches -> on crée nos proches tâches, on les lie entre elles (dans un ordre spécifique), ce qui finalement correspond à notre build.
+Le système de build de Gradle est basé sur ces tâches -> on crée nos proches
+tâches, on les lie entre elles (dans un ordre spécifique), ce qui finalement
+correspond à notre build.
 
-<aside class="notice">
-Pour info., il y a une tâche par défaut appellé <code>wrapper</code>.<br/>
-On ne va pas en parler en detail ici. Par contre, pour culture générale, il s'agit d'une tâche permettant de générer des scripts (pour OS Windows et Unix). <br/>Ces scripts générés permettent d'exécuter toutes les tâches du projet sur n'importe quelle machine, qu'elle ait Gradle d'installé ou pas (Ces scripts embarquent en interne la version de Gradle de la machine sur laquelle ont été généré ces scripts). <br/>
-Pour conclure sur ce <code>wrapper</code>, l'objectif est de fournir des distribuables du build Gradle "cross-platform" et "Gradle version independent".
+<aside class="notice"> 
+
+Pour info., il y a une tâche par défaut appellé <code>wrapper</code>.<br/> On
+ne va pas en parler en detail ici. Par contre, pour culture générale, il s'agit
+d'une tâche permettant de générer des scripts (pour OS Windows et Unix).
+<br/>Ces scripts générés permettent d'exécuter toutes les tâches du projet sur
+n'importe quelle machine, qu'elle ait Gradle d'installé ou pas (Ces scripts
+embarquent en interne la version de Gradle de la machine sur laquelle ont été
+généré ces scripts). <br/> Pour conclure sur ce <code>wrapper</code>,
+l'objectif est de fournir des distribuables du build Gradle "cross-platform" et
+"Gradle version independent". 
+
 </aside>
 
-### 2.2.3 "Propriétés"
 
-Un projet contient des propriétés (**properties**) qui contiennent de nombreuses informations - dont la plupart ont des valeurs par défaut - pour permettre le build. Ces propriétés vont du nom du projet au répertoire de destination de la génération du build.
-
-Pour lister l'ensemble des propriétés : voir **code C.**.
-
-> C. Tout OS :
-
-```shell
-# Exécuter la tâche "properties" du projet :
-gradle properties
-```
-
-L'on peut changer la plupart de ces propriétés directement dans le fichier `build.gradle`.
-
-Si dans le fichier `gradle.properties`, l'on ajoutait
-
-`description = 'Description de mon projet'`<br/>
-`version = '1.0'`
-
-En lançant à nouveau la tâche **properties**, on aurait alors les propriétés `description` et `version` modifiées.
-
-### 2.2.4 Ecrire une "tâche" - les pré-requis
+## Ecrire une "tâche" - les pré-requis
 
 Avant d'écrire notre 1ère tâche (et donc modifier `build.gradle`), il faut savoir certaines choses à propos du fichier de build :
 
@@ -193,7 +203,112 @@ Avant d'écrire notre 1ère tâche (et donc modifier `build.gradle`), il faut sa
 Dans le fichier `build.gradle`, de nombreux imports sont implicites, permettant d'appeler l'API de Gradle sans 'full qualifier' les appels de classes, de méthodes ou de champs statiques ([Liste des imports](https://docs.gradle.org/4.5/userguide/writing_build_scripts.html#script-default-imports)).
 
 
-### 2.2.5 Ecrire une "tâche"
+## Ecrire une "tâche"
+
+>Ecrivons notre première tâche dans build.gradle
+
+```groovy
+task hello {
+	println 'configuration'
+	doLast{
+		println 'Hello world!'
+	}
+	doFirst{
+		println 'first !'
+	}
+}
+```
+
+>Executer une tâche
+
+```
+gradle -q hello
+```
+
+>Liste des tâches
+
+```
+gradle tasks --all
+```
+
+Voilà c'est tout simple.
+
+## Ecrire une "tâche" et des dépendances entre elles
+
+> On peut ajouter des dépendances à ces tâches.
+
+
+```groovy
+task hello{
+	doLast{
+		println 'Hello world!'
+	}
+}
+task intro(dependsOn: hello){
+	doLast{
+		println "I'm Gradle"
+	}
+}
+```
+
+> Gradle permet aussi de générer des taches.
+
+```groovy
+4.times { counter ->
+    task "task$counter" {
+	    println "I'm task number $counter"
+    }
+}
+```
+
+## Continuer une tâche ou ajouter une dépendance.
+
+> Il est possible d'ajouter des action à la fin d'une tache ou au début.
+```groovy
+task hello.doLast{
+	print 'Hello'
+}
+hello.doLast {
+	println 'world!'	
+}
+hello.doFirst {
+	println 'First !'
+}
+```
+
+> Il est aussi possible d'ajouter une dépéndance après avoir définit la tâche.
+
+```groovy
+task hello {
+	doLast{
+		println 'Hello world!'
+	}
+}
+task intro {
+	doLast{
+		println "I'm Gradle"
+	}
+}
+intro.dependsOn hello
+```
+
+> Du coup dans la génération des tâches on peut faire comme suis:
+
+```groovy
+4.times { counter ->
+    task "task$counter" {
+	doLast{
+            println "I'm task number $counter"
+	}
+    }
+    if (counter > 1){
+	tasks["task$counter"].dependsOn "task${counter-1}"
+    }
+}
+```
+
+## Rentre une tâche visible de tasks
+
 
   Maintenant que l'on connait le contexte d'écriture du fichier de build, créons des tâches sous différentes formes (voir **code D.**) :
 > D. Nouveau contenu de notre 'build.gradle' :
@@ -287,8 +402,33 @@ Il existe d'autres façons d'écrire des tâches :
 </ul>
 </aside>
 
+### "Propriétés"
 
-### 2.2.6 Conclusion
+Un projet contient des propriétés (**properties**) qui contiennent de
+nombreuses informations - dont la plupart ont des valeurs par défaut - pour
+permettre le build. Ces propriétés vont du nom du projet au répertoire de
+destination de la génération du build.
+
+Pour lister l'ensemble des propriétés : voir **code C.**.
+
+> C. Tout OS :
+
+```shell
+# Exécuter la tâche "properties" du projet :
+gradle properties
+```
+
+L'on peut changer la plupart de ces propriétés directement dans le fichier `build.gradle`.
+
+Si dans le fichier `gradle.properties`, l'on ajoutait
+
+`description = 'Description de mon projet'`<br/>
+`version = '1.0'`
+
+En lançant à nouveau la tâche **properties**, on aurait alors les propriétés `description` et `version` modifiées.
+
+
+### Conclusion
 
 On s'est familiarisé de façon minimaliste avec les notions de :
 
@@ -304,7 +444,7 @@ On s'est familiarisé de façon minimaliste avec les notions de :
 
 Il nous faut maintenant comprendre le système de build.
 
-# 3. Système de build
+# Système de build
 
 TODO
 
@@ -324,14 +464,14 @@ https://plugins.gradle.org/
 
 
 
-# 4. Gradle et Java
+# Gradle et Java
 
 https://docs.gradle.org/4.4.1/userguide/tutorial_java_projects.html
 https://guides.gradle.org/building-java-applications/
 
-# 5. Gradle et IntelliJ
+# Gradle et IntelliJ
 
-# 6. Gradle et NeoLoad Web
+# Gradle et NeoLoad Web
 
 
 

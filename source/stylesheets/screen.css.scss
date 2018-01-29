@@ -34,6 +34,7 @@ html, body {
   background-color: $main-bg;
   height: 100%;
   -webkit-text-size-adjust: none; /* Never autoresize text */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, Helvetica, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -319,6 +320,9 @@ html, body {
   // to place content above the dark box
   position: relative;
   z-index: 30;
+  text-align: justify;
+  text-justify: inter-word;
+  counter-reset: h1;
 
   &:after {
     content: '';
@@ -340,9 +344,14 @@ html, body {
   }
 
   // the div is the tocify hidden div for placeholding stuff
-  &>h1, &>h2, &>div {
+  &>h1, &>h2, &>h3, &>div {
     clear:both;
   }
+
+
+  h1:before {counter-increment: h1; content: counter(h1) ". "}
+  h2:before {counter-increment: h2; content: counter(h1) "." counter(h2) ". "}
+  h3:before {counter-increment: h3; content: counter(h1) "." counter(h2) "." counter(h3) ". "}
 
   h1 {
     @extend %header-font;
@@ -354,6 +363,8 @@ html, body {
     border-top: 1px solid #ccc;
     border-bottom: 1px solid #ccc;
     background-color: #fdfdfd;
+    counter-reset: h2;
+
   }
 
   h1:first-child, div:first-child + h1 {
@@ -370,7 +381,9 @@ html, body {
     padding-top: 1.2em;
     padding-bottom: 1.2em;
     background-image: linear-gradient(to bottom, rgba(#fff, 0.2), rgba(#fff, 0));
+    counter-reset: h3;
   }
+
 
   // h2s right after h1s should bump right up
   // against the h1s.
