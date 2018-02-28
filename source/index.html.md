@@ -264,6 +264,7 @@ task intro(dependsOn: hello){
 ## Continuer une tâche ou ajouter une dépendance.
 
 > Il est possible d'ajouter des action à la fin d'une tache ou au début.
+
 ```groovy
 task hello.doLast{
 	print 'Hello'
@@ -296,14 +297,14 @@ intro.dependsOn hello
 
 ```groovy
 4.times { counter ->
-    task "task$counter" {
-	doLast{
-            println "I'm task number $counter"
+	task "task$counter" {
+		doLast{
+			println "I'm task number $counter"
+		}
 	}
-    }
-    if (counter > 1){
-	tasks["task$counter"].dependsOn "task${counter-1}"
-    }
+	if (counter > 1){
+		tasks["task$counter"].dependsOn "task${counter-1}"
+	}
 }
 ```
 
