@@ -99,7 +99,8 @@ Cela va nous permettre de faire une migration douce.
 On va maintenant - au fur et à mesure - exécuter des opérations basiques
 permettant d'introduire les concepts de base de Gradle.
 
-Ce qui suit est une version condensée et donc moins explicite du tutoriel officiel de Gradle.
+Ce qui suit est une version condensée et donc moins explicite du tutoriel
+officiel de Gradle.
 
 Pour les sources, ci après le lien : [Gradle builds](https://guides.gradle.org/creating-new-gradle-builds/).
 
@@ -126,7 +127,8 @@ de `Project`.
 
 Ce projet contient des sous-éléments appelés "tâches" (**tasks**). 
 
-Par défault un projet Gradle vide contient déjà des tâches pré-définies. Pour lister les tâches d'un projet (voir **code B.**).
+Par défault un projet Gradle vide contient déjà des tâches pré-définies. Pour
+lister les tâches d'un projet (voir **code B.**).
 
 > B. Tout OS :
 
@@ -200,7 +202,10 @@ Avant d'écrire notre 1ère tâche (et donc modifier `build.gradle`), il faut sa
 
 * **Imports implicites**
 
-Dans le fichier `build.gradle`, de nombreux imports sont implicites, permettant d'appeler l'API de Gradle sans 'full qualifier' les appels de classes, de méthodes ou de champs statiques ([Liste des imports](https://docs.gradle.org/4.5/userguide/writing_build_scripts.html#script-default-imports)).
+Dans le fichier `build.gradle`, de nombreux imports sont implicites, permettant
+d'appeler l'API de Gradle sans 'full qualifier' les appels de classes, de
+méthodes ou de champs statiques 
+([Liste des imports](https://docs.gradle.org/4.5/userguide/writing_build_scripts.html#script-default-imports)).
 
 
 ## Ecrire une "tâche"
@@ -209,7 +214,7 @@ Dans le fichier `build.gradle`, de nombreux imports sont implicites, permettant 
 
 ```groovy
 task hello {
-	println 'configuration'
+	println '==> configuration'
 	doLast{
 		println 'Hello world!'
 	}
@@ -225,13 +230,27 @@ task hello {
 gradle -q hello
 ```
 
+
+
 >Liste des tâches
 
 ```
 gradle tasks --all
 ```
 
-Voilà c'est tout simple.
+On constante que le mot configuration est affiché même si on n'appelle pas la
+tâche hello. Même lorsqu'on demande la liste des tâches.
+D'où l'importance du doFirst ou doLast
+
+<aside class="notice">
+
+Les autres tâches déjà fournies sont disponibles via l' <a
+href="https://docs.gradle.org/current/javadoc/org/gradle/api/Task.html">API
+officielle</a>. Certaines nécessitent l'application/activation d'un
+<b>plugin</b> (on verra ça plus tard).
+
+</aside>
+
 
 ## Ecrire une "tâche" et des dépendances entre elles
 
@@ -266,9 +285,12 @@ task intro(dependsOn: hello){
 > Il est possible d'ajouter des action à la fin d'une tache ou au début.
 
 ```groovy
-task hello.doLast{
-	print 'Hello'
+task hello{
+        doLast{
+                print 'Hello '
+        }
 }
+
 hello.doLast {
 	println 'world!'	
 }
@@ -308,102 +330,169 @@ intro.dependsOn hello
 }
 ```
 
+## Logging de gradle
+
+Gradle possède un logger. Ce logger vient de l'interface **Script**.  ([Details au sujet du
+logging](https://docs.gradle.org/4.5/userguide/logging.html))
+
+```groovy
+task run {
+	doFirst{
+		logger.quiet('An info log message which is always logged.')
+		logger.error('An error log message.')
+		logger.warn('A warning log message.')
+		logger.lifecycle('A lifecycle info log message.')
+		logger.info('An info log message.')
+		logger.debug('A debug log message.')
+		logger.trace('A trace log message.')
+	}
+}
+```
+
+Vous pouvez le régler avec différents flags en ligne de commandes : 
+no logging options
+
+Option | Description
+--------- | -----------
+no logging options | LIFECYCLE and higher
+-q or --quiet | QUIET and higher
+-w or --warn | WARN and higher
+-i or --info | INFO and higher
+-d or --debug | DEBUG and higher (that is, all log messages)
+
 ## Rentre une tâche visible de tasks
 
 
   Maintenant que l'on connait le contexte d'écriture du fichier de build, créons des tâches sous différentes formes (voir **code D.**) :
-> D. Nouveau contenu de notre 'build.gradle' :
+> Nouveau contenu de notre 'build.gradle' :
 
 ```groovy
-    description = 'Description de mon build'
-    version = '1.0'
-     
-    def maVariableGlobale = 'valeur de ma variable globale'
-    
-    def maFonctionQuiAfficheParam1(param1) {
+task maTache1 { 
+	doLast{
+		logger.warn 'je suis caché'
+	}	
+}
 
-        println param1
-    }
-    
-    task maTache1 { 
-
-        maFonctionQuiAfficheParam1 'mon param'
-    }
-
-    task maTache2 { 
-
-        logger.error(maVariableGlobale);
-    }
-
-    task copy(type: Copy) {
-        from 'src'
-        into 'dest'
-    }
-
-    maTache2.group= 'Ma catégorie de tâches'
+task maTache2 { 
+	doLast{
+		logger.warn 'je suis visible'
+	}
+	group= 'Ma catégorie de tâches'
+}
 ```
 
-Dans notre nouveau fichier `build.gradle`, nous avons défini 3 tâches :
+Dans notre nouveau fichier `build.gradle`, nous avons défini 2 tâches :
 
 * `maTache1`
 
-Il s'agit d'une **tâche interne** qui appelle la fonction `maFonctionQuiAfficheParam1` avec comme paramètre en entrée la chaîne de caractères 'mon param'.
+Il s'agit d'une **tâche interne** qui appelle la fonction
+`maFonctionQuiAfficheParam1` avec comme paramètre en entrée la chaîne de
+caractères 'mon param'.
 
 * `maTache2`
 
-Il s'agit d'une **tâche exposée** (publique) associée à la catégorie de tâches `Ma catégorie de tâches`. Elle est exposée parce qu'elle appartient à un groupe / une catégorie.
+Il s'agit d'une **tâche exposée** (publique) associée à la catégorie de tâches
+`Ma catégorie de tâches`. Elle est exposée parce qu'elle appartient à un groupe
+/ une catégorie.
 
-Cette tâche log en erreur la variable globale `maVariableGlobale`. Comme dit précédemment, ce logger vient de l'interface **Script**.
-([Details au sujet du logging](https://docs.gradle.org/4.5/userguide/logging.html))
+
+## Differentes types de tâches
+
 
 * `copy`
 
-Il s'agit d'une tâche se basant sur une tâche standard fournie par Gradle (**Copy**).
-Cette tâche copie le contenu du repertoire 'src' (relatif au fichier `build.gradle`) dans le répertoire 'dest' ([Javadoc](https://docs.gradle.org/current/javadoc/org/gradle/api/tasks/Copy.html), [DSL](https://docs.gradle.org/current/dsl/org.gradle.api.tasks.Copy.html)).
+Il s'agit d'une tâche d'un type de tâche facilitant la Copie de fichiers.  
+Cette tâche copie le contenu du repertoire 'src' (relatif au
+fichier `build.gradle`) dans le répertoire 'dest'
+***exclude*** est optionnel et permet de filtrer les fichers indésirable.
+Il y a aussi ***include*** ***expand*** etc...
+[Pour plus d'info](https://docs.gradle.org/current/userguide/working_with_files.html)
 
-Maintenant on va lister en ligne de commande ces tâches (voir **code E.**):
+([Javadoc](https://docs.gradle.org/current/javadoc/org/gradle/api/tasks/Copy.html),
+[DSL](https://docs.gradle.org/current/dsl/org.gradle.api.tasks.Copy.html)).
 
-> E. Lister toutes les tâches incluant celles qui sont internes
 
+> copy task
+```groovy
+task copyTask(type: Copy) {
+    from 'src'
+    into 'dst'
+    exclude '**/*staging*'
+}
 ```
-gradle tasks --all
+* `Zip`
+
+Il s'agit d'une tâche d'un type de tâche facilitant la fabrication d'archive zip.
+Même principe que copy. Il expose différentes méthodes permetant de faire une archive zip.
+
+[DSL](https://docs.gradle.org/current/dsl/org.gradle.api.tasks.bundling.Zip.html)
+
+
+
+> Zip task
+
+```groovy
+apply plugin: 'java'
+
+task zip(type: Zip) {
+    from 'src/dist'
+    into('libs') {
+        from configurations.runtime
+    }
+}
 ```
 
-L'option `--all`permet d'afficher les tâches internes (sans groupe). L'on voit alors :
+```groovy
+task myZip(type: Zip) {
+    from 'somedir'
+}
 
--'copy' et 'maTache1' dans 'Other tasks'
-
--'maTache2' dans 'Ma catégorie de tâches tasks'
-
-On peut exécuter directement `maTache1`et `maTache2` (voir **code F.**):
-
-> F. Exécuter 'maTache1' et 'maTache2'
-
+println myZip.archiveName
+println relativePath(myZip.destinationDir)
+println relativePath(myZip.archivePath)
 ```
-gradle -q maTache1
-gradle -q maTache2
+
+
+* `Jar`
+
+Il s'agit d'une tâche d'un type de tâche facilitant la fabrication de jar.
+Dans notre exemple nous faisons un fatjar. Mais il est possible de faire autre chose.
+
+Dans cet exemple nous ajoutons le classifier all
+Puis on ajoute dans le manifest les informations nécessaires au manifest du jar.
+***from*** nous permet de definir les fichier qu'on va inclure dans le jar.
+***with*** indique qu'on sera un jar.
+
+[DSL](https://docs.gradle.org/current/dsl/org.gradle.api.tasks.bundling.Jar.html)
+
+
+> Jar task
+
+```groovy
+task fatJar(type: Jar) {
+    classifier 'all'
+    manifest {
+        attributes 'Implementation-Title': 'Kerberos Tester',
+                'Implementation-Version': version,
+                'Main-Class': 'com.neotys.tester.kerberos.KerberosConfigurationTester'
+    }
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
 ```
-Pour la tâche `copy`, créons le répertoire 'src' et un fichier arbitraire dedans.
-
-Ensuite lançons la tâche 'copy' et vérifions que le répertoire 'dest' a été créé et le fichier provenant de 'src' copié.
 
 
 
-
-
-<aside class="notice">
-Les autres tâches déjà fournies sont disponibles via l' <a href="https://docs.gradle.org/current/javadoc/org/gradle/api/Task.html">API officielle</a>. Certaines nécessitent l'application/activation d'un <b>plugin</b> (on verra ça plus tard).
-</aside>
 
 <aside class="notice">
 Il existe d'autres façons d'écrire des tâches :
 <ul>
     <li><a href="https://guides.gradle.org/writing-gradle-tasks/#make_the_message_configurable">Tâche via déclaration d'une classe</a></li>
-    <li><a href="https://docs.gradle.org/4.5/userguide/more_about_tasks.html#sec:defining_tasks">Syntaxes alternatives</a></li>
+    <li><a href="https://docs.gradle.org/current/userguide/more_about_tasks.html#sec:defining_tasks">Syntaxes alternatives</a></li>
 </ul>
 </aside>
 
-### "Propriétés"
+## "Propriétés"
 
 Un projet contient des propriétés (**properties**) qui contiennent de
 nombreuses informations - dont la plupart ont des valeurs par défaut - pour
@@ -423,13 +512,106 @@ L'on peut changer la plupart de ces propriétés directement dans le fichier `bu
 
 Si dans le fichier `gradle.properties`, l'on ajoutait
 
-`description = 'Description de mon projet'`<br/>
-`version = '1.0'`
+> exemple d'un gradle.properties 
+
+```
+group=com.neotys.web
+version=51.1.7-SNAPSHOT
+name=neotys-web-foundation
+description=description (optionel)
+```
 
 En lançant à nouveau la tâche **properties**, on aurait alors les propriétés `description` et `version` modifiées.
 
+## Sous projects (modules/reactor en Maven)
 
-### Conclusion
+### Les sous modules
+
+Gradle support les modules comme maven. C'est à dire une configuration à la
+racine du projet et inclure différents projets dans des sous répertoires.
+Pour cela il faut juste les déclarer comme dans maven (***<module>***).
+La déclaration dans gradle se fait dans settings.gradle
+
+> Exemple de declaration
+
+> settings.gradle
+
+```groovy
+include 'otherModules'
+```
+
+> build.gradle vide
+
+
+> otherModules/build.gradle
+
+```groovy
+task hello{
+        doLast{
+                logger.warn "I'm submodule"
+        }
+}
+```
+
+Faire un gradle hello à la racine. Le nom du module est le nom du répertoire.
+On peut changer le nom  du module dans le settings.gradle.
+
+> Pour inclure tout les sous répertoires de premier niveau settings.gradle
+
+```groovy
+rootDir.eachDir {
+	File subGradle = new File(it, "build.gradle")
+	if (subGradle.exists()) {
+		include it.name
+	}
+}
+```
+
+> settings.gradle
+
+```groovy
+include ':awesomeModule'
+project(':awesomeModule').projectDir = "$rootDir/otherModule" as File
+```
+
+Relancer ***gradle hello*** vous verez un autre nom de module.
+
+Essayer d'adapter la bouble for pour mettre un prefix à chaque nom de sous modules.
+
+
+### Modifier tout les projet ou sous modules
+Il est possible d'affecter toutes taches de tout les modules et de tout les projets.
+Par exemple si on début on crée les tâches hello. Du coup il faut enlever le mot ***task*** dans le otherProject.
+
+> build.gradle à la racine
+
+```groovy
+allprojects {
+    task hello {
+        doLast { task ->
+            logger.warn "I'm $task.path"
+        }
+    }
+}
+subprojects {
+    hello {
+        doLast {
+            logger.warn "- I depend on root"
+        }
+    }
+}
+
+hello{
+        doFirst{
+                logger.warn "I'm root"
+        }
+}
+```
+
+
+
+
+## Conclusion
 
 On s'est familiarisé de façon minimaliste avec les notions de :
 
@@ -447,9 +629,85 @@ Il nous faut maintenant comprendre le système de build.
 
 # Système de build
 
+## Lifecycle
+Vous avez pu entrevoir qu'il y avait plusieurs étapes durant un lancement.
+
+<ul>
+<li>Initialization : Recherche des projet qui seront compilé</li>
+<li>Configuration : instanciation des objets et génère les taches</li>
+<li>Execution : executes les différentes tâches</li>
+</ul>
+
+in settings.gradle
+
+```groovy
+println 'This is executed during the initialization phase.'
+```
+
+in build.gradle
+
+```groovy
+println 'This is executed during the configuration phase.'
+
+task configured {
+    println 'This is also executed during the configuration phase.'
+}
+
+task test {
+    doLast {
+        println 'This is executed during the execution phase.'
+    }
+}
+
+task testBoth {
+    doFirst {
+      println 'This is executed first during the execution phase.'
+    }
+    doLast {
+      println 'This is executed last during the execution phase.'
+    }
+    println 'This is executed during the configuration phase as well.'
+}
+```
+
+```shell
+> gradle test testBoth
+This is executed during the initialization phase.
+
+> Configure project :
+This is executed during the configuration phase.
+This is also executed during the configuration phase.
+This is executed during the configuration phase as well.
+
+> Task :test
+This is executed during the execution phase.
+
+> Task :testBoth
+This is executed first during the execution phase.
+This is executed last during the execution phase.
+
+BUILD SUCCESSFUL in 0s
+2 actionable tasks: 2 executed
+```
+
+## Plugins
+
+Il existe beaucoup de plugins pour gradle. Vous pouvez en ajouter.
+Souvent ces plugin sont écrit en gradle ou java.
+
+Un petit tutoriel ce trouve ici.
+https://blog.betomorrow.com/mon-premier-plugin-gradle-5bce748558b5
+ 
+Un peut de doc:
+https://docs.gradle.org/current/userguide/plugins.html
+https://docs.gradle.org/current/userguide/standard_plugins.html#sec:base_plugins
+
+https://plugins.gradle.org/
+
+
 TODO
 
-https://docs.gradle.org/4.4.1/userguide/build_lifecycle.html
+https://docs.gradle.org/current/userguide/build_lifecycle.html
 
 Pour doc. exhaustive à propos des tâches + ordering des tâches
 https://docs.gradle.org/current/dsl/org.gradle.api.Task.html
@@ -466,13 +724,128 @@ https://plugins.gradle.org/
 
 
 # Gradle et Java
+Gradle possède un plugin java qui se calque sur la structure maven.
+Se plugin se veut compatible avec les projets mavent. C'est ce plugin qu'on va utiliser pour nos projet.
 
-https://docs.gradle.org/4.4.1/userguide/tutorial_java_projects.html
+Pour l'utiliser il suffit de mettre au debut de votre build.gradle :
+
+```groovy
+apply plugin: 'java'
+```
+
+des nouvelles taches apparaissent.
+
+```shell
+> gradle build
+> Task :compileJava
+> Task :processResources
+> Task :classes
+> Task :jar
+> Task :assemble
+> Task :compileTestJava
+> Task :processTestResources
+> Task :testClasses
+> Task :test
+> Task :check
+> Task :build
+
+BUILD SUCCESSFUL in 0s
+6 actionable tasks: 6 executed
+```
+
+Nous pouvons utiliser mavenCentral
+
+```groovy
+repositories {
+    mavenCentral()
+}
+```
+
+Nous pouvons utiliser les dépendences:
+
+```groovy
+dependencies {
+    compile group: 'commons-collections', name: 'commons-collections', version: '3.2.2'
+    testCompile group: 'junit', name: 'junit', version: '4.+'
+}
+```
+
+Essayez de faire votre propre projet avec IntelliJ.
+
+Vous verez que le code gradle est beaucoup plus simple et court.
+
+
+https://docs.gradle.org/current/userguide/tutorial_java_projects.htm
 https://guides.gradle.org/building-java-applications/
 
-# Gradle et IntelliJ
+## Gradle et IDE
+Gradle est compatible avec IntelliJ et Eclipse
+
+
+https://www.jetbrains.com/help/idea/gradle.html
+https://www.jhipster.tech/configuring-ide-eclipse-gradle/
+
 
 # Gradle et NeoLoad Web
+Nous avons configuré un maximum de choses pour vous.
+Nous avons aussi un projet type : neotys-web-foundation-gradle.
+
+
+Pour cela nous nous somme calqué sur notre structure de projet maven. 
+Ainsi les artefacts sont déclaré dans le build.gradle dans une map.
+
+Nous avons fait un super gradle qui sont chargé comme suit:
+
+```groovy
+buildscript {scriptHandler->
+	apply from: 'http://webstorage/gradle/super-gradle/develop/buildscript.gradle', to: scriptHandler
+}
+apply from: 'http://webstorage/gradle/super-gradle/develop/build.gradle'
+```
+
+Qui sera peut être transféré dans nexus.
+Vous pouvez regarder ces fichier cela vous donnera une idée de gradle.
+
+
+Les modules du projet sont décrit settings.gradle.
+Nous pouvons faire en sorte de faire découvrir à gradle tout les sous projets.
+Ce qui rend la configuration plus facile.
+
+```groovy
+rootDir.eachDir {
+    File subGradle = new File(it, "build.gradle")
+    if (subGradle.exists()) {
+        String subName = ":neotys-web-foundation-${it.name}"
+        include subName
+        project(subName).projectDir = it as File
+    }
+}
+```
+
+Dans le fichier gradle.properties dans le projet il y a les coordonnée du projet.
+
+```groovy
+group=com.neotys.web
+version=51.1.7-SNAPSHOT
+name=neotys-web-foundation
+```
+
+
+## Configuration Nexus
+<aside class="notice"> 
+Pour configurer les credentials de nexus utiliser le fichier gradle.properties dans ~/.gradle ou C:\Users\userName\.gradle
+</aside>
+
+```groovy
+nexusUrl=http://nexus.intranet.neotys.com
+nexusUsername=XXX
+nexusPassword=YYY
+```
+
+
+
+
+
 
 
 
